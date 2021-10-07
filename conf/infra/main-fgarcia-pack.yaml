@@ -1,0 +1,103 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Lambda demo app
+Resources:
+  APIGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: "Lambdademo\u200B-fgarcia-APIGateway"
+      StageName: dev
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location:
+              Fn::Join:
+              - ''
+              - - s3://
+                - jcala-s3bucket/api-spec/api-fgarcia-spec.yaml
+      Variables:
+        ApiGateway:
+          Ref: APIGateway
+        region:
+          Ref: AWS::Region
+  LambdaIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lambdademo-fgarcia-IAMLambdaRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Policies:
+      - PolicyName: lambdademo-fgarcia-IAMLambdaRole-IAMPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:*
+            - sns:*
+            - s3:*
+            - lambda:*
+            - states:StartExecution
+            - states:ListExecutions
+            - ssm:*
+            - sqs:*
+            - ses:*
+            Resource: '*'
+  lambdademoFgarciaFunctionGetUsers:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: My lambda function get users
+      FunctionName: lambdademo-fgarcia-getUsers
+      CodeUri: s3://jcala-s3bucket/package/6f22275d70a21c539aff18738270b249
+      Handler: ./lambda_handler.getUsers
+      Role:
+        Fn::GetAtt:
+        - LambdaIAMRole
+        - Arn
+      Runtime: nodejs14.x
+      Timeout: 60
+      Events:
+        PostHttp:
+          Type: Api
+          Properties:
+            Path: /users
+            Method: GET
+            RestApiId:
+              Ref: APIGateway
+  lambdademoFgarciaFunctionGetUserById:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: My lambda function get user by Id
+      FunctionName: lambdademo-fgarcia-getUserById
+      CodeUri: s3://jcala-s3bucket/package/6f22275d70a21c539aff18738270b249
+      Handler: ./lambda_handler.getUserById
+      Role:
+        Fn::GetAtt:
+        - LambdaIAMRole
+        - Arn
+      Runtime: nodejs14.x
+      Timeout: 60
+      Events:
+        PostHttp:
+          Type: Api
+          Properties:
+            Path: /user/{id}
+            Method: GET
+            RestApiId:
+              Ref: APIGateway
+Outputs:
+  ModuleId:
+    Value: Lambdademo
+  ModuleVersion:
+    Value: '1.0'
+  StackName:
+    Value:
+      Ref: AWS::StackName
