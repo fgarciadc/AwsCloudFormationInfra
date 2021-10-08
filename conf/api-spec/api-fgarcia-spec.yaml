@@ -31,7 +31,7 @@ paths:
         httpMethod: "POST"
         type: "aws_proxy"
   /user/:
-    get:
+    post:
       tags:
         - Process provider request.
       summary: Create User
@@ -42,7 +42,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UsersResponse'
+                $ref: '#/components/schemas/NewUser'
         '405':
           description: Error in response
       x-amazon-apigateway-integration:
@@ -63,7 +63,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UsersResponse'
+                $ref: '#/components/schemas/User'
         '405':
           description: Error in response
       x-amazon-apigateway-integration:
@@ -90,6 +90,20 @@ components:
         id: 
           type: string
           example: 1
+        name: 
+          type: string
+          example: diana
+        lastname: 
+          type: string
+          example: salas
+        age: 
+          type: integer
+          example: 24
+  
+    NewUser:
+      type: object
+      description: Request sended by our provider.
+      properties:
         name: 
           type: string
           example: diana
